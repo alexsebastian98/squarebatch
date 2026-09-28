@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>SquareBatch — Privacy-First Browser-Only Photo Squaring</title>
+  <meta name="description" content="Turn up to 50 photos at once into perfectly squared images with custom padding and solid background. 100% private, browser-only Canvas tool.">
+  <meta name="theme-color" content="#0b0c0e">
+
+  <!-- Content Security Policy: strictly same-origin & local blob/data -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; worker-src 'self' blob:; connect-src 'self';">
+
+  <!-- Open Graph & Social Cards -->
+  <meta property="og:title" content="SquareBatch — Privacy-First Browser Photo Squaring">
+  <meta property="og:description" content="Square batch photos with custom padding and backgrounds directly in your browser. Zero uploads.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="./icon.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SquareBatch — Browser-Only Photo Squaring">
+  <meta name="twitter:description" content="Turn photos into perfectly squared assets with custom padding. 100% private.">
+
+  <!-- PWA & Favicon -->
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <link rel="manifest" href="./manifest.json">
+
+  <!-- Local Styles -->
+  <link rel="stylesheet" href="./style.css">
+
+  <!-- Local JSZip Library (v3.10.1) -->
+  <script src="./vendor/jszip.min.js"></script>
+</head>
+<body>
+  <!-- Header Bar -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-group">
+        <div class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">Square<span>Batch</span></div>
+          <div class="brand-subtitle">Darkroom Canvas Squaring for Photographers</div>
+        </div>
+      </div>
+      <div class="header-right-group">
+        <a href="./squarebatch-website.zip" download="squarebatch-website.zip" class="btn-download-source" title="Download complete website source code as ZIP">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Download Site ZIP</span>
+        </a>
+        <div class="privacy-badge" title="No photos leave your computer">
+          <span>100% Local Browser Engine</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- TOP SECTION: Prominent Live Preview Panel -->
+    <section class="preview-panel" aria-labelledby="previewHeading">
+      <div class="preview-header">
+        <div class="preview-title-area">
+          <span class="preview-tag" id="previewHeading">Live Preview</span>
+          <span class="preview-filename" id="previewFilename">No photo loaded</span>
+          <span class="preview-meta" id="previewDimensions">—</span>
+        </div>
+        <div class="preview-controls">
+          <button type="button" class="btn-icon" id="prevPhotoBtn" title="Previous photo (←)" aria-label="Previous photo" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <span id="previewIndexCounter" class="control-hint">0 / 0</span>
+          <button type="button" class="btn-icon" id="nextPhotoBtn" title="Next photo (→)" aria-label="Next photo" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+          <button type="button" class="preview-guide-toggle" id="toggleGuideBtn" title="Toggle inner padding boundary guide (G)" aria-pressed="false">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+              <line x1="9" y1="3" x2="9" y2="21"></line>
+              <line x1="15" y1="3" x2="15" y2="21"></line>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="3" y1="15" x2="21" y2="15"></line>
+            </svg>
+            <span>Padding Guide</span>
+          </button>
+          <button type="button" class="preview-guide-toggle" id="toggleZoomBtn" title="Toggle 1:1 Actual Size / Fit View (Z)" aria-pressed="false">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <line x1="11" y1="8" x2="11" y2="14"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+            <span id="zoomToggleText">Fit</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="preview-stage" id="previewStage">
+        <!-- Canvas wrapper with guide overlay -->
+        <div class="preview-canvas-wrapper" id="previewCanvasWrapper" style="display: none;">
+          <canvas id="previewCanvas" width="900" height="900"></canvas>
+          <div class="preview-guide-overlay" id="previewGuideOverlay"></div>
+        </div>
+
+        <!-- Placeholder when no photo loaded -->
+        <div class="preview-placeholder" id="previewPlaceholder">
+          <div class="placeholder-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+              <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+          </div>
+          <div class="placeholder-title">Darkroom Preview Awaiting Photos</div>
+          <p class="placeholder-desc">Drop portrait, landscape, or camera photos anywhere to start. Your uploaded photo will appear here live as you adjust padding and colors.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOWER WORKSPACE: Controls on Left, Ingestion & Grid on Right -->
+    <div class="workspace-grid">
+
+      <!-- LEFT: Batch Controls Panel -->
+      <aside class="controls-panel" aria-label="Batch Squaring Controls">
+        <div class="panel-header">
+          <span class="panel-title">Batch Controls</span>
+          <span class="control-hint">Applies to all photos</span>
+        </div>
+
+        <!-- One-Click Presets -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <label class="control-label">Quick Presets</label>
+          </div>
+          <div class="preset-grid">
+            <button type="button" class="preset-btn" id="presetInstagram">
+              <span class="preset-name">Instagram</span>
+              <span class="preset-sub">1440px • JPG 100 • White</span>
+            </button>
+            <button type="button" class="preset-btn" id="presetLossless">
+              <span class="preset-name">Lossless PNG</span>
+              <span class="preset-sub">Full Res • Crisp Alpha</span>
+            </button>
+            <button type="button" class="preset-btn" id="presetDarkroom">
+              <span class="preset-name">Darkroom Black</span>
+              <span class="preset-sub">2000px • 8% Pad • #000</span>
+            </button>
+            <button type="button" class="preset-btn" id="presetStudioIvory">
+              <span class="preset-name">Studio Ivory</span>
+              <span class="preset-sub">2000px • 10% Pad • Warm</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Output Canvas Size -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <label for="outputSizeInput" class="control-label">Output Square Size</label>
+            <span class="control-hint" id="aspectRatioHint">1:1 Aspect</span>
+          </div>
+          <div class="input-with-unit">
+            <input type="number" id="outputSizeInput" min="200" max="8000" step="10" value="2000" aria-label="Output size in pixels">
+            <span class="input-unit">px</span>
+          </div>
+          <div class="quick-pills">
+            <button type="button" class="pill-btn" data-size="1080">1080 (IG Post)</button>
+            <button type="button" class="pill-btn" data-size="1440">1440 (IG Hi-Res)</button>
+            <button type="button" class="pill-btn active" data-size="2000">2000 (Standard)</button>
+            <button type="button" class="pill-btn" data-size="3000">3000 (Portfolio)</button>
+            <button type="button" class="pill-btn" data-size="4000">4000 (Print)</button>
+          </div>
+        </div>
+
+        <!-- Padding Percentage (Slider + Number) -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <label for="paddingSlider" class="control-label">Border Padding</label>
+            <span class="control-hint" id="paddingPxHint">200px each side</span>
+          </div>
+          <div class="synced-slider-group">
+            <input type="range" id="paddingSlider" class="slider-range" min="0" max="40" step="0.1" value="10" aria-label="Padding percentage slider">
+            <input type="number" id="paddingNumber" class="synced-number-input" min="0" max="40" step="0.1" value="10" aria-label="Padding percentage number">
+            <span class="input-unit" style="position: static; font-family: var(--font-mono); font-size: 0.85rem;">%</span>
+          </div>
+        </div>
+
+        <!-- Background Color -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <label for="bgColorInput" class="control-label">Background Fill</label>
+            <span class="control-hint">Solid canvas</span>
+          </div>
+          <div class="color-picker-row">
+            <div class="color-input-wrapper">
+              <input type="color" id="bgColorPicker" value="#ffffff" aria-label="Pick color with system color picker">
+            </div>
+            <input type="text" id="bgColorHex" class="hex-text-input" value="#FFFFFF" maxlength="7" spellcheck="false" aria-label="Background color hex code">
+            <button type="button" class="btn-icon" id="eyeDropperBtn" title="Pick color from photo or screen" aria-label="Pick color from screen" style="display: none;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m14 7 3 3m-9.5 7.5L3 21l3.5-4.5 8.5-8.5a2.121 2.121 0 0 0-3-3L3.5 13.5Z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="swatch-group" role="radiogroup" aria-label="Background Color Swatches">
+            <button type="button" class="swatch-btn swatch-white active" data-color="#FFFFFF" title="Pure White" aria-label="Pure White">White</button>
+            <button type="button" class="swatch-btn swatch-black" data-color="#000000" title="Pitch Black" aria-label="Pitch Black">Black</button>
+            <button type="button" class="swatch-btn swatch-ivory" data-color="#FDFBF7" title="Warm Ivory" aria-label="Warm Ivory">Ivory</button>
+            <button type="button" class="swatch-btn swatch-charcoal" data-color="#1C1D22" title="Deep Charcoal" aria-label="Deep Charcoal">Charcoal</button>
+          </div>
+        </div>
+
+        <!-- Export Format & Quality -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <label class="control-label">Export Format</label>
+            <span class="control-hint">sRGB Canvas</span>
+          </div>
+          <div class="segmented-control" role="group" aria-label="Export image format">
+            <button type="button" class="segmented-btn active" data-format="image/jpeg">JPEG</button>
+            <button type="button" class="segmented-btn" data-format="image/png">PNG</button>
+            <button type="button" class="segmented-btn" data-format="image/webp">WebP</button>
+          </div>
+        </div>
+
+        <!-- Quality Slider (Hidden when PNG selected) -->
+        <div class="control-group" id="qualityControlGroup">
+          <div class="control-label-row">
+            <label for="qualitySlider" class="control-label">Encoding Quality</label>
+            <span class="control-hint" id="qualityValDisplay">92%</span>
+          </div>
+          <div class="synced-slider-group">
+            <input type="range" id="qualitySlider" class="slider-range" min="50" max="100" step="1" value="92" aria-label="Compression quality slider">
+            <input type="number" id="qualityNumber" class="synced-number-input" min="50" max="100" step="1" value="92" aria-label="Compression quality number">
+            <span class="input-unit" style="position: static; font-family: var(--font-mono); font-size: 0.85rem;">%</span>
+          </div>
+        </div>
+
+        <!-- Filename Suffix -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <label for="suffixInput" class="control-label">Filename Suffix</label>
+            <span class="control-hint" id="suffixPreview">photo_square.jpg</span>
+          </div>
+          <input type="text" id="suffixInput" class="text-input-field" value="_square" spellcheck="false" aria-label="Filename suffix">
+        </div>
+
+        <!-- Memory / Chunk Size Setting -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <label for="chunkSizeSelect" class="control-label">Memory Batch Chunk</label>
+            <span class="control-hint" title="Number of images processed per garbage-collection cycle">RAM Safety</span>
+          </div>
+          <select id="chunkSizeSelect" class="select-field" aria-label="Batch chunk size for memory management">
+            <option value="5">5 photos (Ultra-low RAM / Mobile)</option>
+            <option value="10" selected>10 photos (Recommended)</option>
+            <option value="20">20 photos (Fast Desktop / 16GB+ RAM)</option>
+          </select>
+        </div>
+
+      </aside>
+
+      <!-- RIGHT: Drop Zone & Batch Grid -->
+      <section class="batch-section" aria-labelledby="batchListHeading">
+
+        <!-- Drag & Drop Zone -->
+        <div class="drop-zone" id="dropZone" tabindex="0" role="button" aria-label="Drop photos or click to upload">
+          <div class="drop-zone-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+          </div>
+          <div class="drop-zone-title">Drop Photos or Entire Folders Here</div>
+          <p class="drop-zone-desc">Accepts JPEG, PNG, and WebP files. Subfolders are scanned recursively.</p>
+          <div class="drop-zone-actions">
+            <button type="button" class="btn-upload" id="selectFilesBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span>Select Photos</span>
+            </button>
+            <button type="button" class="btn-upload" id="selectFolderBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <span>Select Folder</span>
+            </button>
+          </div>
+
+          <!-- Hidden File Inputs -->
+          <input type="file" id="fileInput" multiple accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" style="display: none;">
+          <input type="file" id="folderInput" webkitdirectory directory multiple style="display: none;">
+        </div>
+
+        <!-- High Volume Warning Banner (shown when >60 photos) -->
+        <div class="alert-banner alert-warning" id="largeBatchAlert" style="display: none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div id="largeBatchAlertText">Large batch detected. SquareBatch will process in sequential chunks to protect browser memory.</div>
+        </div>
+
+        <!-- Batch Toolbar -->
+        <div class="batch-toolbar" id="batchToolbar" style="display: none;">
+          <div class="batch-stats">
+            <span class="stats-count" id="batchCountText">0 Photos</span>
+            <span class="stats-meta" id="batchSizeText">0 MB total</span>
+          </div>
+          <div class="batch-actions-group">
+            <button type="button" class="btn-secondary" id="retryFailedBtn" style="display: none;">Retry Failed</button>
+            <button type="button" class="btn-secondary btn-danger" id="clearAllBtn">Clear All</button>
+          </div>
+        </div>
+
+        <!-- Thumbnail Grid -->
+        <div class="thumbnail-grid" id="thumbnailGrid" aria-live="polite">
+          <!-- Dynamically populated cards -->
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Section 7: Sticky Bottom Action Bar -->
+  <aside class="bottom-bar hidden" id="bottomBar" aria-label="Batch progress and download bar">
+    <div class="bottom-bar-left">
+      <div class="process-progress-container">
+        <div class="progress-info">
+          <span id="progressStatusLabel">Ready to square</span>
+          <strong id="progressCounter">0 / 0</strong>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressBarFill"></div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-bar-actions">
+      <button type="button" class="btn-primary" id="processAllBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        <span id="processBtnText">Process All Photos</span>
+      </button>
+      <button type="button" class="btn-primary btn-zip" id="saveZipBtn" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span id="zipBtnText">Save All as ZIP</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-privacy">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+      </svg>
+      <span>Your photos never leave your device.</span>
+    </div>
+    <p>Everything runs 100% inside your local browser via the HTML5 Canvas API. Zero telemetry, cookies, or external requests.</p>
+    <p class="footer-credit">Created by Alex Brijo Sebastian</p>
+  </footer>
+
+  <!-- Full-Window Drag & Drop Overlay -->
+  <div class="window-drag-overlay" id="windowDragOverlay" aria-hidden="true">
+    <div class="drag-overlay-box">
+      <div class="drag-overlay-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+      </div>
+      <h2>Drop Photos or Folders Here</h2>
+      <p>Instantly squared locally in your browser with zero uploads</p>
+    </div>
+  </div>
+
+  <!-- App Script -->
+  <script type="module" src="./app.js"></script>
+
+  <!-- Register Offline Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => {
+          console.warn('Service Worker registration skipped/failed:', err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

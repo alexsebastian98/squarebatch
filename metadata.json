@@ -1,0 +1,6 @@
+{
+  "name": "SquareBatch",
+  "description": "Privacy-first, browser-only batch photo squaring tool with custom padding, background color, and ZIP export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

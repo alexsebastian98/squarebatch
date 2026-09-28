@@ -1,0 +1,17 @@
+{
+  "name": "SquareBatch — Browser-Only Photo Squaring",
+  "short_name": "SquareBatch",
+  "description": "Privacy-first, browser-only batch photo squaring tool with custom padding, background color, and ZIP export.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0b0c0e",
+  "theme_color": "#0b0c0e",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
