@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="96" fill="#14151a"/>
+  <!-- Outer square border -->
+  <rect x="64" y="64" width="384" height="384" rx="32" fill="none" stroke="#282a35" stroke-width="8"/>
+  <!-- Inner padded photo area -->
+  <rect x="112" y="112" width="288" height="288" rx="16" fill="#1c1d24" stroke="#d98b3f" stroke-width="6"/>
+  <!-- Darkroom aperture / camera mark -->
+  <circle cx="256" cy="256" r="64" fill="none" stroke="#d98b3f" stroke-width="10"/>
+  <circle cx="256" cy="256" r="32" fill="#d98b3f"/>
+  <!-- Corner crop/squaring marks -->
+  <path d="M96 144 V100 H140" fill="none" stroke="#d98b3f" stroke-width="6" stroke-linecap="round"/>
+  <path d="M416 144 V100 H372" fill="none" stroke="#d98b3f" stroke-width="6" stroke-linecap="round"/>
+  <path d="M96 368 V412 H140" fill="none" stroke="#d98b3f" stroke-width="6" stroke-linecap="round"/>
+  <path d="M416 368 V412 H372" fill="none" stroke="#d98b3f" stroke-width="6" stroke-linecap="round"/>
+</svg>
